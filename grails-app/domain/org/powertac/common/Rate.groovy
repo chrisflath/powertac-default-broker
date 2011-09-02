@@ -255,12 +255,8 @@ class Rate //implements Serializable
       }
       else {
         // first, remove the existing charge for the specified time
-        HourlyCharge probe = new HourlyCharge(atTime: newCharge.atTime.plus(1000l), value: 0)
-        SortedSet<HourlyCharge> head = rateHistory.headSet(probe)
-        if (head != null || head.size() > 0) {
-          HourlyCharge item = head.last()
-          if (item.atTime == newCharge.atTime)
-            rateHistory.remove(item)
+          if (rateHistory == null)
+            rateHistory = new TreeSet<HourlyCharge>()
         }
         log.info "Adding $newCharge to $this"
         //println "Adding $newCharge to $this"
@@ -268,7 +264,6 @@ class Rate //implements Serializable
         assert this.save()
         result = true
       }
-    }
     return result
   }
 
@@ -375,6 +370,10 @@ class Rate //implements Serializable
   {
     if (isFixed)
       return minValue
+    else if (rateHistory == null) {
+      log.info "no rate history, return default"
+      return expectedMean // default
+    }
     else if (rateHistory.size() == 0) {
       log.info "no rate history, return default"
       return expectedMean // default
